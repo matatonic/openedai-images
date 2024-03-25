@@ -1,0 +1,43 @@
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+    image: ghcr.io/matatonic/openedai-images
+    env_file:
+      - .env
+    ports:
+      - 5005:5005
+    command: ["python", "images.py", "--host", "0.0.0.0", "--port", "5005"]
+
+# You can also use
+# environment:
+#   - SD_BASE_URL=http://stable-diffusion-webui:3001
+# With the below config for running SD locally.
+#
+  #stable-diffusion-webui:
+  #  extends: 
+  #    #Get the latest file: https://github.com/ashleykleynhans/stable-diffusion-docker/blob/main/docker-compose.yml
+  #    file: docker-compose.sdwui.yml
+  #    service: stable-diffusion-webui
+# or
+#  stable-diffusion-webui:
+#    image: ashleykza/stable-diffusion-webui:latest
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: all
+#              capabilities: [gpu]
+#    volumes:
+#      - /workspace:/workspace
+#    ports:
+#      - "3000:3001"
+#      - "3010:3011"
+#      - "3020:3021"
+#      - "6006:6066"
+#      - "8888:8888"
+#    environment:
+#      JUPYTER_PASSWORD: "Jup1t3R!"
+#      ENABLE_TENSORBOARD: "1"
+#    restart: unless-stopped
