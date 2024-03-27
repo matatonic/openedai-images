@@ -157,6 +157,8 @@ async def generations(request: GenerationsRequest):
         # https://platform.openai.com/docs/guides/images/prompting
         if not request.prompt.startswith("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):
             request.prompt = revised_prompt = await OpenDallePrompt(request.prompt)
+        else:
+            request.prompt = request.prompt[len("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):]
 
     req = rg.create_request(request.prompt, int(width), int(height), request.n)
     print(req)
