@@ -7,9 +7,9 @@
   "hr_upscaler": "Latent",
   "denoising_strength": 0.68,
   "subseed_strength": 0.75,
+  "override_settings_restore_afterwards": false,
   "override_settings": {
     "sd_model_checkpoint": "dreamshaperXL_lightningDPMSDE.safetensors",
-    "sd_vae": null
-  },
-  "override_settings_restore_afterwards": false
+    "sd_vae": "fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors"
+  }
 }
