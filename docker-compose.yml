@@ -2,9 +2,12 @@ services:
   server:
     build:
       dockerfile: Dockerfile
+    tty: true
     image: ghcr.io/matatonic/openedai-images
     env_file:
       - .env
+    volumes:
+      - ./config:/app/config
     ports:
       - 5005:5005
     command: ["python", "images.py", "--host", "0.0.0.0", "--port", "5005"]

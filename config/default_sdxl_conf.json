@@ -2,6 +2,13 @@
   "sampler_name": "DPM++ 2S a Karras",
   "refiner_checkpoint": "sd_xl_refiner_1.0.safetensors",
   "refiner_switch_at": 0.8,
-  "VAE": "fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors",
-  "steps": 40
+  "steps": 40,
+  "hr_upscaler": "Latent",
+  "denoising_strength": 0.68,
+  "subseed_strength": 0.75,
+  "override_settings": {
+    "sd_model_checkpoint": "opendalle_v11.safetensors",
+    "sd_vae": "fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors"
+  },
+  "override_settings_restore_afterwards": false
 }

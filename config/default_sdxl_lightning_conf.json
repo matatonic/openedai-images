@@ -2,7 +2,14 @@
   "sampler_name": "DPM++ SDE",
   "refiner_checkpoint": null,
   "refiner_switch_at": 0.0,
-  "VAE": null,
   "steps": 4,
-  "cfg_scale": 1.0
+  "cfg_scale": 1.0,
+  "hr_upscaler": "Latent",
+  "denoising_strength": 0.68,
+  "subseed_strength": 0.75,
+  "override_settings": {
+    "sd_model_checkpoint": "dreamshaperXL_lightningDPMSDE.safetensors",
+    "sd_vae": null
+  },
+  "override_settings_restore_afterwards": false
 }
