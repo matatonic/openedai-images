@@ -45,7 +45,7 @@ async def OpenDallePrompt(prompt):
 7. **Additional details (5-10 words).** Include specific or important details that will complement and clarify the visualization.
 8. **Overall mood or impression (3-7 words).** Conclude with a description of the overall mood or main impression that the image should convey.
 
-Write everything in 1 sentence (not a list), separating with commas, in English, strictly following the instruction (especially the number of words)."""},
+Write everything in 1 sentence (not a list), separating with commas, in English, strictly following the instruction (especially the number of words). Provide descriptions that are direct and literal, avoiding metaphors and figurative language, and exclude specific features like "Velvet shadows." Focus on explicit and clear depiction of features, surroundings, element combinations, symbolic significance, lighting, additional details, and overall mood without using commonly associated expressions or imagery."""},
         {'role': 'assistant', 'content': "Understood, provide the input and I will generate a complete description of a scene."},
         {'role': 'user', 'content': "photo of an ancient castle very atmospheric, but the sky should be completely covered in clouds, yet it should be bright."},
         {'role': 'assistant', 'content': "photo of an ancient castle with a majestic, eerie ambiance, highlighting its towering spires, weathered stone, and ivy-clad walls, set against a backdrop of a dense, mystic forest under a sky completely shrouded in clouds yet illuminated by a diffused, ethereal light, where the fusion of natural decay and enduring architectural grandeur evokes a sense of timeless mystery and the eternal battle between man and nature, casting a glow that reveals subtle details and textures, creating an impression of haunting beauty and solemn tranquility. "},
@@ -79,7 +79,8 @@ class txt2img_request_generator:
     def maybe_scaler(self, payload, width, height):
         scale = math.sqrt(width * height) / self.base_model_size
 
-        if scale >= 1.2:
+        # If the target is more than 20% off the ideal size, scale it
+        if abs(scale - 1) >= 0.2:
             # SD expects pixel sized aligned by 8
             sd_width = 8 * round(width / (scale * 8))
             sd_height = 8 * round(height / (scale * 8))
@@ -158,7 +159,7 @@ async def generations(request: GenerationsRequest):
         if not request.prompt.startswith("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):
             request.prompt = revised_prompt = await OpenDallePrompt(request.prompt)
         else:
-            request.prompt = request.prompt[len("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):]
+            request.prompt = revised_prompt = request.prompt[len("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):]
 
     req = rg.create_request(request.prompt, int(width), int(height), request.n)
     print(req)

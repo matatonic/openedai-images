@@ -1,12 +1,13 @@
 {
   "sampler_name": "DPM++ SDE",
-  "refiner_checkpoint": null,
   "refiner_switch_at": 0.0,
   "steps": 4,
   "cfg_scale": 1.0,
   "hr_upscaler": "Latent",
   "denoising_strength": 0.68,
   "subseed_strength": 0.75,
+  "restore_faces": false,
+  "negative_prompt": "ac_neg1 ac_neg2",
   "override_settings_restore_afterwards": false,
   "override_settings": {
     "sd_model_checkpoint": "dreamshaperXL_lightningDPMSDE.safetensors",
