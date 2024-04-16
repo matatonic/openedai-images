@@ -18,13 +18,13 @@ Compatibility:
 - - [ ] style ("vivid or natural")
 - - [ ] user
 - [ ] edits
-- [ ] variations
+- [x] variations *(square input size is not required but output size is always 1M pixel)
 
 This is in active development and currently works for basic use-cases. It selects the generation configuration based on the chosen model.
 
 The default configuration uses:
 - dall-e-1: sd 1.5
-- dall-e-2: sdxl_lightning
+- dall-e-2: sdxl_turbo / sdxl_lightning
 - dall-e-3: sdxl
 
 Settings for each model type can be found in the config folder, and can be modified as needed without needing to restart the server.

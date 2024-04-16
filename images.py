@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import io
 import os
 import sys
 import time
-import json
+import yaml
 import math
 import argparse
 
@@ -12,26 +13,102 @@ from typing import Optional, List
 from fastapi import UploadFile, Form
 import uvicorn
 from pydantic import BaseModel
+import base64
+from PIL import Image
 
 import openedai
 
 pipe = None
 app = openedai.OpenAIStub()
 
-CONF_PATH = 'config'
-SD_BASE_URL = os.environ['SD_BASE_URL'] # f"{SD_BASE_URL}/sdapi/v1/txt2img"
-OPENAI_BASE_URL = os.environ.get('OPENAI_BASE_URL', None) # for dall-e-3 enhanced prompts
-
 if OPENAI_BASE_URL:
     import openai
     openai_client = openai.Client()
 
-#class ImageResponse:
-#    b64_json: str
-#    url: str
-#    revised_prompt: str
 
-async def OpenDallePrompt(prompt):
+async def sd_request(payload, api="txt2img", config_manager=None):
+    if config_manager is None:
+        raise ValueError("ConfigManager instance is required")
+
+    # Get the base URL from the configuration
+    # Check if the environment variable is set and override the base URL if it is
+    base_url = os.environ.get("SD_BASE_URL", base_url, config_manager.get(["default", "enhanced_prompt", "sd_base_url"]))
+
+    # Send the request and return the response
+    response = requests.post(f"{base_url}/sdapi/v1/{api}", json=payload)
+    r = response.json()
+    if response.status_code != 200 or 'images' not in r:
+        #raise ServiceUnavailableError(r.get('error', 'Unknown error calling Stable Diffusion'), code=response.status_code, internal_message=r.get('errors', None))
+        print(r)
+        return []
+    
+    return r['images']
+
+"""
+defaults:
+  enhanced_prompt:
+    models:
+    - dall-e-3
+    openai_api_key: sk-1111
+    openai_base_url: http://localhost:5005/v1
+    params:
+"""
+class ConfigManager:
+    def __init__(self, config_path):
+        self.config_path = config_path
+        self.parsed_config = self.load_config()
+
+    def load_config(self):
+        with open(self.config_path, 'r') as f:
+            return yaml.safe_load(f)
+
+    def update_config(self):
+        self.parsed_config = self.load_config()
+
+    def get_config(self):
+        return self._get_config(self.parsed_config)
+
+    # ['defaults', 'enhanced_prompt', 'openai_api_key'], 
+    def get(self, key: list[str], default=None):
+        conf = self.load_config()
+        if len(key) > 1:
+            for k in key:
+                if k in conf:
+                    conf = conf[k]
+                else:
+                    return default
+        if conf:
+            return conf.get(key[-1], default)
+        return default
+
+async def DallesquePrompt(prompt, config_manager=None):
+    if config_manager is None:
+        raise ValueError("ConfigManager instance is required")
+
+    # Get the base URL and API key from the configuration
+    # Check if the environment variables are set and override the base URL and API key if they are
+    base_url = os.environ.get("OPENAI_BASE_URL", config_manager.get_config().get("openai_base_url"))
+    api_key = os.environ.get("OPENAI_API_KEY", config_manager.get_config().get("openai_api_key"))
+
+    # Construct the request payload
+    payload = {
+        "model": "gpt-3.5-turbo",
+        "messages": config_manager.get_config().get("enhanced_prompts").get("messages"),
+        "temperature": 0.7,
+    }
+
+    # Send the request and return the response
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.post(base_url, json=payload, headers=headers)
+    return response.json()
+
+
+if model in config_manager.get_config().get("openai_api_key"))
+    
+
+async def DallesquePrompt(prompt):
+
+    
     if not OPENAI_BASE_URL:
         return prompt
 
@@ -93,6 +170,21 @@ class txt2img_request_generator:
             }
             payload.update(scaler)
 
+    def maybe_vscaler(self, payload, width, height):
+        scale = math.sqrt(width * height) / self.base_model_size
+
+        # If the target is more than 20% off the ideal size, scale it
+        if abs(scale - 1) >= 0.2:
+            # SD expects pixel sized aligned by 8
+            sd_width = 8 * round(width / (scale * 8))
+            sd_height = 8 * round(height / (scale * 8))
+            scaler = {
+                'width': sd_width,
+                'height': sd_height,
+                'resize_mode': 3,
+            }
+            payload.update(scaler)
+
     def create_request(self, prompt, width, height, n):
         payload = {
             'prompt': prompt,
@@ -101,6 +193,20 @@ class txt2img_request_generator:
             'batch_size': n,
         }
         self.maybe_scaler(payload, width, height)
+        payload.update(self.default_conf)
+        return payload
+
+    async def create_variation(self, image, width, height, n):
+        img_dat = await image.read()
+        pil_image = Image.open(io.BytesIO(img_dat))
+        payload = {
+            'init_images': [base64.b64encode(img_dat).decode()],
+            'width': pil_image.size[0],
+            'height': pil_image.size[1],
+            'batch_size': n,
+        }
+
+        self.maybe_vscaler(payload, pil_image.size[0], pil_image.size[1])
         payload.update(self.default_conf)
         return payload
 
@@ -115,16 +221,6 @@ class sdxl_lightning_request_generator(txt2img_request_generator):
 class sdxl_request_generator(txt2img_request_generator):
     base_model_size = 1024
     default_conf_path = f'{CONF_PATH}/default_sdxl_conf.json'
-
-async def generations_request(payload):
-    response = requests.post(url=f"{SD_BASE_URL}/sdapi/v1/txt2img", json=payload)
-    r = response.json()
-    if response.status_code != 200 or 'images' not in r:
-        #raise ServiceUnavailableError(r.get('error', 'Unknown error calling Stable Diffusion'), code=response.status_code, internal_message=r.get('errors', None))
-        print(r)
-        return []
-    
-    return r['images']
 
 class GenerationsRequest(BaseModel):
     prompt: str
@@ -146,6 +242,7 @@ async def generations(request: GenerationsRequest):
     revised_prompt = None
     width, height = request.size.split('x')
 
+    Config()
     # TODO: select backend model by config
     if request.model == 'dall-e-1':
         rg = sd15_request_generator()
@@ -157,14 +254,14 @@ async def generations(request: GenerationsRequest):
         # dall-e-3 reworks the prompt
         # https://platform.openai.com/docs/guides/images/prompting
         if not request.prompt.startswith("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):
-            request.prompt = revised_prompt = await OpenDallePrompt(request.prompt)
+            request.prompt = revised_prompt = await DallesquePrompt(request.prompt)
         else:
             request.prompt = revised_prompt = request.prompt[len("I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"):]
 
     req = rg.create_request(request.prompt, int(width), int(height), request.n)
     print(req)
 
-    imgs = await generations_request(req)
+    imgs = await sd_request(req, "txt2img")
 
     if imgs:
         for b64_json in imgs:
@@ -200,24 +297,56 @@ async def edits(request: EditsRequest):
     }
 
 
-class VariationsRequest(BaseModel):
-    image: UploadFile
-    model: str = Form("dall-e-2") # only dall-e-2
-    size: Optional[str] = Form("1024x1024") #256x256, 512x512, or 1024x1024 for dall-e-2.
-    response_format: Optional[str] = Form("url") # or b64_json
-    n: Optional[int] = Form(1) # 1-10
-    user: Optional[str] = None
-
 @app.post("/v1/images/variations")
-async def variations(request: VariationsRequest):
-    pass
+async def variations(
+        image: UploadFile,
+        model: str = Form("dall-e-2"), # only dall-e-2
+        size: Optional[str] = Form("1024x1024"), #256x256, 512x512, or 1024x1024 for dall-e-2.
+        response_format: Optional[str] = Form("url"), # or b64_json
+        n: Optional[int] = Form(1), # 1-10
+        user: Optional[str] = Form(None),
+    ):
+    # Steps:
+    # 1) latent up scale input image to 1M pixel (if needed), or bicubic scale down
+    # 2) call img2img with sdxl_lighting defaults, include scaling of output images(s) to output sizes if needed
+    # get original image size
+    resp = {
+        'created': int(time.time()),
+        'data': []
+    }
 
+    width, height = size.split('x')
+
+    # TODO: select backend model by config
+    rg = sdxl_lightning_request_generator()
+        
+    req = await rg.create_variation(image, int(width), int(height), n)
+    print(req)
+
+    imgs = await sd_request(req, "img2img")
+
+    if imgs:
+        for b64_json in imgs:
+            if response_format == 'b64_json':
+                img_dat = {'b64_json': b64_json}
+            else:
+                # TODO: use files API to post this image and return a URL - or reverse engineer the SD URL to get a direct link to the image.
+                img_dat = {'url': f'data:image/png;base64,{b64_json}'}  # yeah it's lazy. requests.get() will not work with this, but web clients will
+
+            resp['data'].extend([img_dat])
+
+    return resp
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description='OpenedAI Images API Server',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    #CONF_PATH = 'config/config.json'
+    #SD_BASE_URL = os.environ['SD_BASE_URL'] # f"{SD_BASE_URL}/sdapi/v1/txt2img"
+    #OPENAI_BASE_URL = os.environ.get('OPENAI_BASE_URL', None) # for dall-e-3 enhanced prompts
+    # args or env:
+    parser.add_argument('-C', '--config', action='store', default='config/config.json', help="Path to config file")
     parser.add_argument('-P', '--port', action='store', default=5005, type=int, help="Server tcp port")
     parser.add_argument('-H', '--host', action='store', default='localhost', help="Host to listen on, Ex. 0.0.0.0")
 
@@ -225,6 +354,14 @@ def parse_args(argv=None):
 
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
+
+    # load config
+    if not os.path.exists(args.config):
+
+    with open(args.config) as f:
+        #app/main.py
+        config = yaml.safe_load(f)
+
 
     # TODO: monitor SD health
     app.register_model('dall-e-1')

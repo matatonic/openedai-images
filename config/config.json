@@ -1,0 +1,86 @@
+{
+  "defaults": {
+    "sd_base_url": "http://stable-diffusion-webui",
+    "enhanced_prompt": {
+      "models": ["dall-e-3"],
+      "openai_base_url": "http://localhost:5005/v1",
+      "openai_api_key": "sk-1111",
+      "params": {
+        "model": "gpt-3.5-turbo",
+        "temperature": 1.99,
+        "top_p": 0.5,
+        "stop": ["\n"],
+        "max_tokens": 300
+      }
+    },
+    "params": {
+      "hr_upscaler": "Latent",
+      "restore_faces": false,
+      "override_settings_restore_afterwards": false
+    }
+  },
+  "dall-e-1": {
+    "defaults": {
+      "sampler_name": "DPM++ 2M Karras",
+      "refiner_switch_at": 0.0,
+      "negative_prompt": "bad_prompt_version2-neg",
+      "override_settings_restore_afterwards": false,
+      "override_settings": {
+        "sd_model_checkpoint": "v1-5-pruned.safetensors",
+        "sd_vae": "vae-ft-mse-840000-ema-pruned.ckpt"
+      }
+    },
+    "standard": {
+      "steps": 25,
+      "cfg_scale": 5.0
+    },
+    "hd": {
+      "steps": 50
+    }
+  },
+  "dall-e-2": {
+    "default": {
+      "sampler_name": "DPM++ SDE",
+      "refiner_switch_at": 0.0,
+      "negative_prompt": "ac_neg1 ac_neg2",
+      "override_settings": {
+        "sd_model_checkpoint": "sdxlTurbo_sdxlTurboPruned.safetensors",
+        "sd_vae": "fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors"
+      }
+    },
+    "standard": {
+      "cfg_scale": 1.0,
+      "steps": 4
+    },
+    "hd": {
+      "cfg_scale": 1.5,
+      "steps": 8
+    }
+  },
+  "dall-e-3": {
+    "default": {
+      "sampler_name": "DPM++ 2S a Karras",
+      "refiner_checkpoint": "sd_xl_refiner_1.0.safetensors",
+      "refiner_switch_at": 0.8,
+      "negative_prompt": "ac_neg1 ac_neg2",
+      "override_settings": {
+        "sd_model_checkpoint": "opendalle_v11.safetensors",
+        "sd_vae": "fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors"
+      }
+    },
+    "standard": {
+      "steps": 30,
+      "cfg_scale": 5.0
+    },
+    "hd": {
+      "steps": 50,
+      "cfg_scale": 7.0
+    },
+    "vivid": {
+      "negative_prompt": "ac_neg1 ac_neg2 low-contrast, muted colors, dull, mundane"
+    },
+    "natural": {
+      "negative_prompt": "ac_neg1 ac_neg2 unnatural high-contrast dramatic"
+    }
+  }
+}

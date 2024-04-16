@@ -3,11 +3,12 @@ import base64
 import time
 import argparse
 import sys
+import os
 import io
 from PIL import Image
 import openai
 
-client = openai.Client(base_url='http://localhost:5005/v1')
+client = openai.Client(base_url='http://localhost:5005/v1', api_key='sk-ip')
 
 TEST_DIR = 'test'
 not_enhanced = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
@@ -63,12 +64,16 @@ def parse_args(argv=None):
     parser.add_argument('-q', '--quick', action='store_true')
     parser.add_argument('-f', '--full', action='store_true')
     parser.add_argument('-n', '--batch', action='store', type=int, default=1)
+    parser.add_argument('-t', '--test-dir', action='store', type=str, default='test')
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])
+
+    TEST_DIR = args.test_dir
+    os.makedirs(TEST_DIR, exist_ok=True)
 
     if args.quick:
         quick_test(args.prompt, n=args.batch)

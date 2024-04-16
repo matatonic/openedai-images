@@ -3,4 +3,5 @@ uvicorn
 pydantic
 requests
 python-multipart
+pillow
 openai

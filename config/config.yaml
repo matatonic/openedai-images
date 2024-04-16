@@ -1,0 +1,86 @@
+defaults:
+  enhanced_prompt:
+    models:
+    - dall-e-3
+    openai_api_key: sk-1111
+    openai_base_url: http://localhost:5005/v1
+    params:
+      max_tokens: 300
+      model: gpt-3.5-turbo
+      stop:
+      - "\n"
+      temperature: 1.99
+      top_p: 0.5
+      messages:
+        - role: user
+          content: |
+            Rules for generating prompts based on user input:
+            1. **Description of the object or scene (5-7 words).** Briefly indicate what or who should be depicted, focusing on the main object or plot.
+            2. **Key characteristics (10-20 words).** Describe important features of the object, character, or scene elements that are key to visualization.
+            3. **Environment or background (10-15 words).** Provide context for the location or surroundings in which the object is situated, adding depth and atmosphere.
+            4. **Combination or blending of elements (10-15 words).** If applicable, explain how different aspects or characteristics combine or blend to create a unique image.
+            5. **Symbolic or emotional significance (10-15 words).** Express the intended symbolic meaning or emotions that the image should evoke.
+            6. **Lighting and time of day (3-5 words).** Specify the lighting and time of day to add to the visual mood of the scene.
+            7. **Additional details (5-10 words).** Include specific or important details that will complement and clarify the visualization.
+            8. **Overall mood or impression (3-7 words).** Conclude with a description of the overall mood or main impression that the image should convey.
+
+            Write everything in 1 sentence (not a list), separating with commas, in English, strictly following the instruction (especially the number of words). Provide descriptions that are direct and literal, avoiding metaphors and figurative language, and exclude specific features like "Velvet shadows." Focus on explicit and clear depiction of features, surroundings, element combinations, symbolic significance, lighting, additional details, and overall mood without using commonly associated expressions or imagery.
+        - role: assistant
+          content: Understood, provide the input and I will generate a complete description of a scene.
+        - role: user
+          content: photo of an ancient castle very atmospheric, but the sky should be completely covered in clouds, yet it should be bright.
+        - role: assistant
+          content: photo of an ancient castle with a majestic, eerie ambiance, highlighting its towering spires, weathered stone, and ivy-clad walls, set against a backdrop of a dense, mystic forest under a sky completely shrouded in clouds yet illuminated by a diffused, ethereal light, where the fusion of natural decay and enduring architectural grandeur evokes a sense of timeless mystery and the eternal battle between man and nature, casting a glow that reveals subtle details and textures, creating an impression of haunting beauty and solemn tranquility.
+  params:
+    hr_upscaler: Latent
+    override_settings_restore_afterwards: false
+    restore_faces: false
+  sd_base_url: http://stable-diffusion-webui
+dall-e-1:
+  base_model_size: 512
+  defaults:
+    sampler_name: DPM++ 2M Karras
+    refiner_switch_at: 0.0
+    negative_prompt: bad_prompt_version2-neg
+    override_settings:
+      sd_model_checkpoint: v1-5-pruned.safetensors
+      sd_vae: vae-ft-mse-840000-ema-pruned.ckpt
+    override_settings_restore_afterwards: false
+  hd:
+    steps: 50
+  standard:
+    cfg_scale: 5.0
+    steps: 25
+dall-e-2:
+  default:
+    refiner_switch_at: 0.0
+    sampler_name: DPM++ SDE
+    negative_prompt: ac_neg1 ac_neg2
+    override_settings:
+      sd_model_checkpoint: sdxlTurbo_sdxlTurboPruned.safetensors
+      sd_vae: fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors
+  standard:
+    cfg_scale: 1.0
+    steps: 4
+  hd:
+    cfg_scale: 1.5
+    steps: 8
+dall-e-3:
+  default:
+    negative_prompt: ac_neg1 ac_neg2
+    override_settings:
+      sd_model_checkpoint: opendalle_v11.safetensors
+      sd_vae: fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors
+    refiner_checkpoint: sd_xl_refiner_1.0.safetensors
+    refiner_switch_at: 0.8
+    sampler_name: DPM++ 2S a Karras
+  standard:
+    cfg_scale: 5.0
+    steps: 30
+  hd:
+    cfg_scale: 7.0
+    steps: 50
+  vivid:
+    negative_prompt: ac_neg1 ac_neg2 low-contrast, muted colors, dull, mundane
+  natural:
+    negative_prompt: ac_neg1 ac_neg2 unnatural high-contrast dramatic
