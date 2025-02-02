@@ -1,6 +1,10 @@
 OpenedAI Images
 ---------------
 
+Notice: This software is mostly obsolete and will no longer be updated.
+
+----
+
 An OpenAI API compatible images server to generate or manipulate images.
 
 This server depends on an existing installation of [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui).
